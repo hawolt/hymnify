@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Hymnify</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        body {
+            margin: 0px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            padding: 10px;
+            background-color: #2a2a2a;
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            width: 300px;
+            height: 440px;
+        }
+
+        a {
+            color: inherit;
+            outline: none;
+        }
+
+        a:visited {
+            color: inherit;
+        }
+
+        #headingContainer {
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 21px;
+        }
+
+        h3 {
+            text-align: center;
+            margin: 5px 0px
+        }
+
+        hr {
+            width: 100%;
+        }
+
+        #textFieldContainer {
+            display: flex;
+            gap: 5px;
+        }
+
+        input[type="password"],
+        input[type="text"] {
+            background-color: #333333;
+            color: #ffffff;
+            border: 1px solid #666666;
+            padding: 5px;
+            border-radius: 4px;
+            flex: 1;
+        }
+
+        button {
+            background-color: #444444;
+            color: #ffffff;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #555555;
+        }
+
+        #copyToClipboardButton {
+            flex-shrink: 0;
+        }
+
+        #toggleSettingButton {
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #settingIndicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        img {
+            max-width: 100%;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .setting-input {
+            display: flex;
+            align-items: center;
+        }
+
+        #entryContainer {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        #entryInput {
+            display: flex;
+            gap: 5px;
+        }
+
+        #entryInput input[type="text"] {
+            flex: 1;
+        }
+
+        #entryList {
+            overflow-y: scroll;
+            max-height: 80px;
+            min-height: 80px;
+            padding-right: 10px;
+        }
+
+        .entryItem {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 2px 5px 0px 2px;
+        }
+
+        .entryItem button {
+            flex-shrink: 0;
+        }
+
+        #entryList::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        #entryList::-webkit-scrollbar-track {
+            background: #333333;
+        }
+
+        #entryList::-webkit-scrollbar-thumb {
+            background: #666666;
+            border-radius: 5px;
+        }
+
+        #entryList::-webkit-scrollbar-thumb:hover {
+            background: #555555;
+        }
+
+        .customAlertOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+        }
+
+        .customAlertBox {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80%;
+            background-color: #333333;
+            color: #ffffff;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+        }
+
+        #closeAlertButton {
+            background-color: #444444;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #closeAlertButton:hover {
+            background-color: #555555;
+        }
+
+        #updateDelayContainer {
+            display: flex;
+            align-items: center;
+        }
+
+        #updateDelayContainer label {
+            margin-right: 10px;
+        }
+
+        #updateDelay {
+            width: 40px;
+            padding: 8px;
+            border: 1px solid #666666;
+            border-radius: 4px;
+            background-color: #333333;
+            color: #ffffff;
+            font-size: 14px;
+            appearance: textfield;
+            margin-left: auto;
+        }
+
+        #updateDelay::-webkit-inner-spin-button,
+        #updateDelay::-webkit-outer-spin-button {
+            margin: 0;
+            color: #ffffff;
+            background-color: #444444;
+            border-radius: 4px;
+            padding: 0;
+            cursor: pointer;
+        }
+
+        #updateDelay::-webkit-inner-spin-button:hover,
+        #updateDelay::-webkit-outer-spin-button:hover {
+            background-color: #555555;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="headingContainer">
+        <img src="https://raw.githubusercontent.com/hawolt/hymnify/main/logo-github.png" alt="header">
+    </div>
+    <h3>DO NOT SHARE THIS LINK IN PUBLIC</h3>
+    <div id="textFieldContainer">
+        <input type="password" id="textField" value="" readonly>
+        <button id="toggleVisibilityButton">
+            <i id="eyeIcon" class="far fa-eye-slash"></i>
+        </button>
+        <button id="copyToClipboardButton">
+            <i class="far fa-clipboard"></i>
+        </button>
+        <button id="toggleSettingButton">
+            <div id="settingIndicator"></div>
+        </button>
+    </div>
+
+    <hr>
+
+    <div id="entryContainer">
+        <div id="entryInput">
+            <input type="text" id="newEntry" placeholder="Add term to whitelist">
+            <button id="addEntryButton">Add</button>
+            <button id="addWhitelistHelp">?</button>
+        </div>
+        <div id="entryList" class="entryList"></div>
+    </div>
+
+    <hr>
+
+    <div id="updateDelayContainer">
+        <label for="updateDelay">Update Delay:</label>
+        <input type="number" id="updateDelay" min="0" value="0">
+    </div>
+
+    <hr>
+
+    <button id="open-dashboard">Open Hymnify Dashboard</button>
+
+    <hr>
+
+    <div class="row">
+        <span>Made with ❤️ by <a href="https://twitter.com/hawolt" target="_blank">hawolt</a></span>
+        <span id="extensionVersion">Version: </span>
+    </div>
+
+    <div class="customAlertOverlay" id="customAlertOverlay">
+        <div class="customAlertBox" id="customAlertBox">
+            <h2 id="popup-headline"></h2>
+            <p id="popup-text"></p>
+            <button id="closeAlertButton">Close</button>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>

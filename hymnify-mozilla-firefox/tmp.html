@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login with Twitch</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" />
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400&display=swap');
+
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #222;
+            font-family: 'Roboto', sans-serif;
+            color: #fff;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        img {
+            max-width: 100%;
+            height: 25px;
+            margin: 20px 0px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 64px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0px;
+        }
+
+        .toggle-button {
+            background-color: #6441A5;
+            color: #fff;
+            border: 1px solid rgb(119, 110, 98);
+            padding: 5px 10px;
+            font-size: 18px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .toggle-button:hover {
+            background-color: #4C2E83;
+        }
+
+        .toggle-button .fas {
+            margin-right: 10px;
+        }
+
+        .toggle-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .customAlertOverlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+        }
+
+        .customAlertBox {
+            display: flex;
+            flex-direction: column;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 35%;
+            background-color: #333333;
+            color: #ffffff;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5);
+            z-index: 10000;
+        }
+
+        #closeAlertButton {
+            background-color: #444444;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #closeAlertButton:hover {
+            background-color: #555555;
+        }
+
+        #popup-text {
+            margin: 0px 0px 15px 0px;
+            display: inline-block;
+        }
+
+        #popup-text img {
+            vertical-align: middle;
+            margin: 0px;
+        }
+
+        #popup-text h2 {
+            margin: 0px;
+        }
+
+        code {
+            font-family: Consolas, monospace;
+            background-color: #8e8c8c;
+            padding: 2px 5px;
+            border-radius: 3px;
+        }
+
+        #main-control {
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .custom-form-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 20px 0px;
+        }
+
+        .custom-form-container input[type="text"],
+        .custom-form-container input[type="number"] {
+            flex: 1;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #444;
+            /* Adjusted border color to match theme */
+            background-color: #333;
+            /* Adjusted background color to match theme */
+            color: #fff;
+            /* Adjusted text color to match theme */
+            margin-right: 10px;
+        }
+
+        .custom-form-container button {
+            background-color: #6441A5;
+            color: #fff;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .custom-form-container button:hover {
+            background-color: #4C2E83;
+        }
+
+        #configuration {
+            margin: 20px 0px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 id="greeting">Hello</h1>
+        <hr>
+        <div id="main-control">
+            Make
+            <img src="https://raw.githubusercontent.com/hawolt/hymnify/main/logo-github.png" alt="Image">
+            <div class="button-container" id="button-container">
+                <button id="toggle-button" class="toggle-button" style="display: none;">Join</button>
+            </div>
+            Your Twitch chat
+        </div>
+        <hr>
+        <div id="configuration">Your command name is currently <code id="code-command-name">song</code> with a delay of
+            <code id="code-command-delay">15</code> seconds
+        </div>
+        <hr>
+        <div class="custom-form-container">
+            <input type="text" id="command-name" placeholder="command name">
+            <input type="number" id="command-number" placeholder="delay">
+            <button id="submit-button">Submit</button>
+        </div>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var data = sessionStorage.getItem('user');
+                if (!data) {
+                    window.location.href = 'https://hymnify.org';
+                    return;
+                }
+
+                var user = JSON.parse(data);
+
+                var state = user.state;
+                var username = user.me.display_name;
+
+                var expirationTime = user.timestamp + (user.auth.expires_in * 1000);
+
+                if (Date.now() < expirationTime) {
+                    document.getElementById('greeting').textContent = "Hello, " + username + " 👋";
+                } else {
+                    window.location.href = 'https://hymnify.org';
+                }
+
+                const customAlertOverlay = document.getElementById('customAlertOverlay');
+                const closeAlertButton = document.getElementById('closeAlertButton');
+
+                closeAlertButton.addEventListener('click', () => {
+                    customAlertOverlay.style.display = 'none';
+                });
+
+                const popupHeadline = document.getElementById('popup-headline');
+                const popupText = document.getElementById('popup-text');
+
+                function configureCustomAlert(headline, text) {
+                    popupHeadline.innerText = headline;
+                    popupText.innerHTML = text;
+                    customAlertOverlay.style.display = 'flex';
+                }
+
+                function buttonClickHandler(event) {
+                    var button = event.currentTarget;
+                    button.disabled = true;
+
+                    var action = button.getAttribute('data-action');
+                    var originalText = button.textContent;
+
+                    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ' + (action === 'join' ? 'Joining...' : 'Leaving...');
+
+                    if (action === 'join') {
+                        configureCustomAlert('Disclaimer', "Hymnify requires <img src='https://static-cdn.jtvnw.net/badges/v1/3267646d-33f0-4b17-b3df-f923a41db1d0/1'> to properly send messages.<hr>You can run this command in your Chat <code >/mod Hymnify</code>")
+                    }
+
+                    fetch('https://chatbot.hymnify.org/instruct', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ action: action, username: username, id: state })
+                    })
+                        .then(response => {
+                            if (response.ok) {
+                                button.innerHTML = (action === 'join' ? '<i class="fas fa-user-minus"></i> Leave' : '<i class="fas fa-user-plus"></i> Join');
+                                button.setAttribute('data-action', action === 'join' ? 'leave' : 'join');
+                            } else {
+                                button.innerHTML = (action === 'join' ? '<i class="fas fa-user-plus"></i> Join' : '<i class="fas fa-user-minus"></i> Leave');
+                                button.setAttribute('data-action', action === 'join' ? 'join' : 'leave');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        })
+                        .finally(() => {
+                            button.disabled = false;
+                        });
+                }
+
+                function submitButtonClickHandler() {
+                    var command = document.getElementById('command-name').value;
+                    var delay = document.getElementById('command-number').value;
+
+                    var payload = {
+                        username: username,
+                        id: state,
+                        configuration: {
+                            command: command,
+                            delay: delay
+                        }
+                    };
+
+                    fetch('https://api.hymnify.org/configure/' + username, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(payload)
+                    })
+                        .then(response => {
+                            if (response.status == 200) {
+                                document.getElementById('code-command-name').innerText = command;
+                                document.getElementById('code-command-delay').innerText = delay;
+                            } else if (response.status == 400) {
+                                configureCustomAlert('Bad Configuration', "Allowed Delay: 0-600<br>Allowed Name up to 32 characters")
+                            } else {
+                                configureCustomAlert('Session Expired', "Please refresh this page")
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+                }
+
+                function initializeButton() {
+                    var button = document.getElementById('toggle-button');
+
+                    fetch('https://chatbot.hymnify.org/status/' + username)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.member === false) {
+                                button.innerHTML = '<i class="fas fa-user-plus"></i> Join';
+                                button.style.display = 'block';
+                                button.setAttribute('data-action', 'join');
+                            } else {
+                                button.innerHTML = '<i class="fas fa-user-minus"></i> Leave';
+                                button.style.display = 'block';
+                                button.setAttribute('data-action', 'leave');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                        });
+                }
+
+                document.getElementById('submit-button').addEventListener('click', submitButtonClickHandler);
+                document.getElementById('toggle-button').addEventListener('click', buttonClickHandler);
+
+                initializeButton();
+
+                fetch('https://api.hymnify.org/configuration/' + username, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ username: username, id: state })
+                })
+                    .then(response => {
+                        if (response.ok) {
+                            return response.json();
+                        } else {
+                            throw new Error('Failed to fetch configuration');
+                        }
+                    })
+                    .then(data => {
+                        document.getElementById('code-command-name').innerText = data['name'];
+                        document.getElementById('code-command-delay').innerText = data['delay'];
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                    });
+            });
+        </script>
+    </div>
+    <div class="customAlertOverlay" id="customAlertOverlay">
+        <div class="customAlertBox" id="customAlertBox">
+            <h2 id="popup-headline"></h2>
+            <div id="popup-text"></div>
+            <button id="closeAlertButton">Close</button>
+        </div>
+    </div>
+</body>
+
+</html>
